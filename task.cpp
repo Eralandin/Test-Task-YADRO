@@ -10,17 +10,17 @@
 #include <algorithm>
 
 using namespace std;
-//Метод валидации формата времени
+//РњРµС‚РѕРґ РІР°Р»РёРґР°С†РёРё С„РѕСЂРјР°С‚Р° РІСЂРµРјРµРЅРё
 bool ValidateTimeFormat(const string& time){
-	//Проверка длины строки
+	//РџСЂРѕРІРµСЂРєР° РґР»РёРЅС‹ СЃС‚СЂРѕРєРё
 	if (time.length() !=5){
 		return false;
 	}
-	//Проверка позиции двоеточия
+	//РџСЂРѕРІРµСЂРєР° РїРѕР·РёС†РёРё РґРІРѕРµС‚РѕС‡РёСЏ
 	if (time[2] != ':'){
 		return false;
 	}
-	//Проверка символов, кроме двоеточия, на то, что они - цифры
+	//РџСЂРѕРІРµСЂРєР° СЃРёРјРІРѕР»РѕРІ, РєСЂРѕРјРµ РґРІРѕРµС‚РѕС‡РёСЏ, РЅР° С‚Рѕ, С‡С‚Рѕ РѕРЅРё - С†РёС„СЂС‹
 	for (int i = 0; i < time.size();i++){
 		if (i!=2 && !isdigit(time[i])) return false;
 	}
@@ -28,31 +28,31 @@ bool ValidateTimeFormat(const string& time){
 	int hours = std::stoi(time.substr(0,2));
 	int minutes = std::stoi(time.substr(3,2));
 	
-	// Проверка допустимого диапазона часов и минут
+	// РџСЂРѕРІРµСЂРєР° РґРѕРїСѓСЃС‚РёРјРѕРіРѕ РґРёР°РїР°Р·РѕРЅР° С‡Р°СЃРѕРІ Рё РјРёРЅСѓС‚
     if (hours < 0 || hours > 23) return false;
     if (minutes < 0 || minutes > 59) return false;
     
     return true;
 }
-//Метод перевода времени в минуты
+//РњРµС‚РѕРґ РїРµСЂРµРІРѕРґР° РІСЂРµРјРµРЅРё РІ РјРёРЅСѓС‚С‹
 int getTimeMinutes(const string& time){
 	int hours = std::stoi(time.substr(0, 2));
     int minutes = std::stoi(time.substr(3, 2));
     return (hours * 60) + minutes;
 }
 
-// Метод проверки, что строка содержит только цифры
+// РњРµС‚РѕРґ РїСЂРѕРІРµСЂРєРё, С‡С‚Рѕ СЃС‚СЂРѕРєР° СЃРѕРґРµСЂР¶РёС‚ С‚РѕР»СЊРєРѕ С†РёС„СЂС‹
 bool isDigits(const string& str) {
     return all_of(str.begin(), str.end(), ::isdigit);
 }
-//Метод проверки имени клиентов
+//РњРµС‚РѕРґ РїСЂРѕРІРµСЂРєРё РёРјРµРЅРё РєР»РёРµРЅС‚РѕРІ
 bool isValidClientName(const string& name) {
     return all_of(name.begin(), name.end(), [](char c) {
         return isalnum(c) || c == '_' || c == '-';
     });
 }
 
-//Класс "Стол"
+//РљР»Р°СЃСЃ "РЎС‚РѕР»"
 class Table{
 	private: 
 		int ID;
@@ -78,10 +78,10 @@ class Table{
     	}
 		void setBusyEnd(int timeEnd, int hourCost) {
 			    this->busyEnd = timeEnd;
-			    int busyDuration = this->busyEnd - this->busyStart; // Вычисление продолжительности в минутах
+			    int busyDuration = this->busyEnd - this->busyStart; // Р’С‹С‡РёСЃР»РµРЅРёРµ РїСЂРѕРґРѕР»Р¶РёС‚РµР»СЊРЅРѕСЃС‚Рё РІ РјРёРЅСѓС‚Р°С…
 			    this->busySummary += busyDuration; 
-			    int hoursUsed = busySummary / 60; // Преобразование в количество часов
-			    if (busySummary % 60 != 0) { // Проверка на неполные часы
+			    int hoursUsed = busySummary / 60; // РџСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ РІ РєРѕР»РёС‡РµСЃС‚РІРѕ С‡Р°СЃРѕРІ
+			    if (busySummary % 60 != 0) { // РџСЂРѕРІРµСЂРєР° РЅР° РЅРµРїРѕР»РЅС‹Рµ С‡Р°СЃС‹
 			        hoursUsed++;
 			    }
 			    this->earnings = hoursUsed * hourCost;
@@ -92,7 +92,7 @@ class Table{
         	return isBusy;
     	}
 };
-//Класс "Событие"
+//РљР»Р°СЃСЃ "РЎРѕР±С‹С‚РёРµ"
 class Event {
 public:
     int time;
@@ -104,7 +104,7 @@ public:
         : time(t), eventID(id), clientName(name), tableNumber(table) {}
 };
 
-//Класс "Компьютерный клуб"
+//РљР»Р°СЃСЃ "РљРѕРјРїСЊСЋС‚РµСЂРЅС‹Р№ РєР»СѓР±"
 class ComputerClub{	
 	public:
 		int tablesCount;
@@ -156,7 +156,7 @@ class ComputerClub{
 	        } else if (event.time < workStart || event.time > workEnd) {
 	            generateError(event.time, "NotOpenYet", output);
 	        } else {
-	            clientTable[event.clientName] = -1; // Клиент в клубе, но не за столом
+	            clientTable[event.clientName] = -1; // РљР»РёРµРЅС‚ РІ РєР»СѓР±Рµ, РЅРѕ РЅРµ Р·Р° СЃС‚РѕР»РѕРј
 	        }
 		}
 		void clientsAtClub(const Event& event, vector<string>& output){
@@ -250,7 +250,7 @@ class ComputerClub{
 	        output.push_back(eventStr);
     	}
 };
-//Тело программы
+//РўРµР»Рѕ РїСЂРѕРіСЂР°РјРјС‹
 int main(int argc, char* argv[]){
 	if (argc != 2) {
         cerr << "Error! Usage: " << argv[0] << " <filename>" << endl;
@@ -269,7 +269,7 @@ int main(int argc, char* argv[]){
     string workStartStr, workEndStr;
     string line;
 	
-	//чтение первой строки
+	//С‡С‚РµРЅРёРµ РїРµСЂРІРѕР№ СЃС‚СЂРѕРєРё
     if (getline(file, line)) {
         istringstream iss(line);
         if (!(iss >> tablesCount) || !isDigits(line)) {
@@ -280,7 +280,7 @@ int main(int argc, char* argv[]){
         cerr << "Error: Failed to read the first line" << endl;
         return 0;
     }
-	// Чтение второй строки
+	// Р§С‚РµРЅРёРµ РІС‚РѕСЂРѕР№ СЃС‚СЂРѕРєРё
     if (getline(file, line)) {
         istringstream iss(line);
         if (!(iss >> workStartStr >> workEndStr) || !ValidateTimeFormat(workStartStr) || !ValidateTimeFormat(workEndStr)) {
@@ -295,7 +295,7 @@ int main(int argc, char* argv[]){
     int workStart = getTimeMinutes(workStartStr);
     int workEnd = getTimeMinutes(workEndStr);
 
-    //чтение третьей стрки
+    //С‡С‚РµРЅРёРµ С‚СЂРµС‚СЊРµР№ СЃС‚СЂРєРё
     if (getline(file, line)) {
         istringstream iss(line);
         if (!(iss >> hourCost) || !isDigits(line)) {
@@ -390,4 +390,3 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
-
