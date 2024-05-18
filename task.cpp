@@ -45,6 +45,12 @@ int getTimeMinutes(const string& time){
 bool isDigits(const string& str) {
     return all_of(str.begin(), str.end(), ::isdigit);
 }
+//Метод проверки имени клиентов
+bool isValidClientName(const string& name) {
+    return all_of(name.begin(), name.end(), [](char c) {
+        return isalnum(c) || c == '_' || c == '-';
+    });
+}
 
 //Класс "Стол"
 class Table{
@@ -305,7 +311,9 @@ int main(int argc, char* argv[]){
     vector<string> output;
 
     output.push_back(workStartStr);
-
+	int lastEventTime;
+	bool isFirstTry = true;
+	
     while (getline(file,line)) {
     	istringstream iss(line);
         string timeStr, clientName;
@@ -315,6 +323,10 @@ int main(int argc, char* argv[]){
             cerr << "Error: Incorrect input format in line " << line << endl;
             return 0;
         }
+        if (!isValidClientName(clientName)) {
+		        cerr << "Error: Incorrect input format of client name in line" << line << endl;
+		        return 0;
+    	}
         if (!isDigits(to_string(eventID))){
         	cerr << "Error: Incorrect input format in line " << line << endl;
             return 0;
@@ -325,6 +337,17 @@ int main(int argc, char* argv[]){
             return 0;
         }
         int time = getTimeMinutes(timeStr);
+        if (!isFirstTry){
+        	if (time < lastEventTime){
+	        	cerr << "Error: Events are not in chronological order at line "<< line << endl;
+	        	return 0;
+			}
+		}
+		else{
+			lastEventTime = time;
+			isFirstTry = false;
+		}
+        
         switch (eventID) {
         case 1:
         	club.processEvent(Event(time,eventID,clientName), output);
@@ -346,6 +369,7 @@ int main(int argc, char* argv[]){
             std::cerr << "Error: Incorrect input format (unknown event ID) in line " << line << std::endl;
             return 0;
         }
+        lastEventTime = time;
     }
     
     while (!club.clientTable.empty()) {
