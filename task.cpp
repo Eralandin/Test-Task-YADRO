@@ -65,7 +65,12 @@ class Table{
 		void setBusyEnd(int timeEnd, int hourCost) {
 	        this->busyEnd = timeEnd;
 	        this->busySummary += (this->busyEnd - this->busyStart);
-	        this->earnings += ((this->busySummary) / 60) * hourCost;
+	        if ((this->busyEnd - this->busyStart)%60 != 0){
+	        	this->earnings += ((this->busyEnd - this->busyStart) / 60 + 1) * hourCost;
+			}
+			else{
+				this->earnings += ((this->busyEnd - this->busyStart) / 60) * hourCost;
+			}
 	        isBusy = false;
     	}
 		bool getIsBusy() const {
@@ -101,37 +106,46 @@ class ComputerClub{
 	            tables.push_back(Table(i + 1));
 	        }
     	}
-		void processEvent(const Event& event) {
+		void processEvent(const Event& event, vector<string>& output) {
 	        switch (event.eventID) {
 	        case 1:
-	            arrivalClients(event);
+	            arrivalClients(event, output);
 	            break;
 	        case 2:
-	            clientsAtClub(event);
+	            clientsAtClub(event, output);
 	            break;
 	        case 3:
-	            clientsWaiting(event);
+	            clientsWaiting(event, output);
 	            break;
 	        case 4:
-	            clientsLeaving(event);
+	            clientsLeaving(event, output);
 	            break;
 	        default:
-	            std::cerr << "Unknown event ID!" << std::endl;
+	            std::cerr << "Unknown event ID! (" << event.eventID << ")" << std::endl;
 	            break;
 	        }
     	}
+    	string formatTime(int minutes) {
+	        int hours = minutes / 60;
+	        int mins = minutes % 60;
+	        ostringstream oss;
+	        oss << setw(2) << setfill('0') << hours << ":"
+	            << setw(2) << setfill('0') << mins;
+	        return oss.str();
+    	}
 	private:
 		void arrivalClients(const Event& event, vector<string>& output){
+			output.push_back(formatTime(event.time) + " 1 " + event.clientName);
 			if (clientTable.find(event.clientName) != clientTable.end()) {
 	            generateError(event.time, "YouShallNotPass", output);
 	        } else if (event.time < workStart || event.time > workEnd) {
 	            generateError(event.time, "NotOpenYet", output);
 	        } else {
 	            clientTable[event.clientName] = -1; // Клиент в клубе, но не за столом
-	            output.push_back(formatTime(event.time) + " 1 " + event.clientName);
 	        }
 		}
-		void clientsAtClub(const Event& event){
+		void clientsAtClub(const Event& event, vector<string>& output){
+			output.push_back(formatTime(event.time) + " 2 " + event.clientName + " " + to_string(event.tableNumber));
 			if (clientTable.find(event.clientName) == clientTable.end()) {
 	            generateError(event.time, "ClientUnknown", output);
 	        } 
@@ -146,11 +160,11 @@ class ComputerClub{
 				else {
 	                tables[event.tableNumber - 1].setBusyStart(event.time);
                 clientTable[event.clientName] = event.tableNumber;
-                output.push_back(formatTime(event.time) + " 2 " + event.clientName + " " + to_string(event.tableNumber));
 	            }
 	        }
 		}
-		void clientsWaiting(const Event& event) {
+		void clientsWaiting(const Event& event, vector<string>& output) {
+			output.push_back(formatTime(event.time) + " 3 " + event.clientName);
 	        if (clientTable.find(event.clientName) == clientTable.end()) {
             generateError(event.time, "ClientUnknown", output);
         	} 
@@ -170,12 +184,12 @@ class ComputerClub{
 	            } 
 				else {
 	                waitingQueue.push(event.clientName);
-	                output.push_back(formatTime(event.time) + " 3 " + event.clientName);
 	            }
         	}
     	}
 
-	    void clientsLeaving(const Event& event) {
+	    void clientsLeaving(const Event& event, vector<string>& output) {
+	    	output.push_back(formatTime(event.time) + " 4 " + event.clientName);
 	        if (clientTable.find(event.clientName) == clientTable.end()) {
 	            generateError(event.time, "ClientUnknown", output);
 	        } 
@@ -183,19 +197,25 @@ class ComputerClub{
 	            int tableNumber = clientTable[event.clientName];
 	            if (tableNumber != -1) {
 	                tables[tableNumber - 1].setBusyEnd(event.time, hourCost);
-	                if (!waitingQueue.empty()) {
-	                    string nextClient = waitingQueue.front();
-                    	waitingQueue.pop();
-                    	tables[tableNumber - 1].setBusyStart(event.time);
-                    	clientTable[nextClient] = tableNumber;
-                    	generateEvent(event.time, 12, nextClient, tableNumber, output);
-	                }
+	                if (event.time >= workEnd)
+					{
+	                	generateEvent(event.time,11,event.clientName,output);
+					}
+					else
+					{
+						if (!waitingQueue.empty()) {
+		                    string nextClient = waitingQueue.front();
+	                    	waitingQueue.pop();
+	                    	tables[tableNumber - 1].setBusyStart(event.time);
+	                    	clientTable[nextClient] = tableNumber;
+	                    	generateEvent(event.time, 12, nextClient, output, tableNumber);
+	                	}
+					}
 	            }
 	            clientTable.erase(event.clientName);
-            	output.push_back(formatTime(event.time) + " 4 " + event.clientName);
 	        }
 	    }
-	    void generateError(int time, const string& error) {
+	    void generateError(int time, const string& error, vector<string>& output) {
         	generateEvent(time, 13, error, output);
     	}
     	void generateEvent(int time, int eventID, const string& clientName, vector<string>& output, int tableNumber = -1) {
@@ -205,28 +225,91 @@ class ComputerClub{
 	        }
 	        output.push_back(eventStr);
     	}
-    	string formatTime(int minutes) {
-	        int hours = minutes / 60;
-	        int mins = minutes % 60;
-	        ostringstream oss;
-	        oss << setw(2) << setfill('0') << hours << ":"
-	            << setw(2) << setfill('0') << mins;
-	        return oss.str();
-    	}	
 };
 //Тело программы
 int main(){
 	string filename = "test_file.txt";
-	std::ifstream file(filename.c_str());
-	
-	if (!file.is_open()){
-		std::cerr << "Can't open file': " << filename << std::endl;
-		return 0;
+    std::ifstream file(filename.c_str());
+
+    if (!file.is_open()) {
+        std::cerr << "Can't open file: " << filename << std::endl;
+        return 0;
+    }
+
+    int tablesCount, hourCost;
+    string workStartStr, workEndStr;
+    int lineNumber = 1;
+
+    if (!(file >> tablesCount)) {
+        cerr << "Error: Incorrect input format in line " << lineNumber << endl;
+        return 0;
+    }
+    lineNumber++;
+
+    if (!(file >> workStartStr >> workEndStr) || !ValidateTimeFormat(workStartStr) || !ValidateTimeFormat(workEndStr)) {
+        cerr << "Error: Incorrect input format in line " << lineNumber << endl;
+        return 0;
+    }
+    lineNumber++;
+
+    int workStart = getTimeMinutes(workStartStr);
+    int workEnd = getTimeMinutes(workEndStr);
+
+    if (!(file >> hourCost)) {
+        cerr << "Error: Incorrect input format in line " << lineNumber << endl;
+        return 0;
+    }
+    lineNumber++;
+
+    ComputerClub club(tablesCount, workStart, workEnd, hourCost);
+    vector<string> output;
+
+    output.push_back(workStartStr);
+
+    string timeStr, clientName;
+    int eventID, tableNumber;
+
+    while (file >> timeStr >> eventID >> clientName) {
+        if (!ValidateTimeFormat(timeStr)) {
+            cerr << "Error: Incorrect input format in line " << lineNumber << " (" << timeStr << ")" << endl;
+            return 0;
+        }
+        int time = getTimeMinutes(timeStr);
+        switch (eventID) {
+        case 1:
+        	club.processEvent(Event(time,eventID,clientName), output);
+        	break;
+        case 3:
+        	club.processEvent(Event(time,eventID,clientName),output);
+        	break;
+        case 4:
+            club.processEvent(Event(time, eventID, clientName), output);
+            break;
+        case 2:
+            file >> tableNumber;
+            club.processEvent(Event(time, eventID, clientName, tableNumber), output);
+            break;
+        default:
+            std::cerr << "Error: Incorrect input format (unknown event ID) " << eventID << std::endl;
+            return 0;
+        }
+        lineNumber++;
+    }
+    
+    while (!club.clientTable.empty()) {
+	    auto it = club.clientTable.begin();
+	    club.processEvent(Event(workEnd, 4, it->first), output);
+	    it->second = -1;
 	}
-	string line;
+	
+    output.push_back(workEndStr);
 
-    while (getline(file, line)) {
+    for (const auto& line : output) {
+        std::cout << line << std::endl;
+    }
 
+    for (const auto& table : club.tables) {
+        std::cout << table.getID() << " " << table.earnings << " " << club.formatTime(table.busySummary) << std::endl;
     }
 
     return 0;
