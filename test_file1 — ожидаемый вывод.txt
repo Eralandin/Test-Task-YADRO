@@ -1,0 +1,36 @@
+09:00
+09:30 1 John
+10:00 2 John 1
+11:00 4 John
+12:00 1 Alice
+12:30 2 Alice 2
+13:00 3 Alice
+13:00 13 ICanWaitNoLonger!
+14:00 4 Alice
+15:00 4 John
+15:00 13 ClientUnknown
+15:20 1 Loki
+15:25 2 Loki 3
+16:00 1 Javier
+16:05 2 Javier 1
+16:30 1 Jack
+16:35 2 Jack 2
+16:50 1 Thor
+16:52 3 Thor
+17:00 1 Goo
+17:02 3 Goo
+18:00 1 Leo
+18:02 3 Leo
+19:00 1 Bill
+19:01 3 Bill
+19:01 11 Bill
+22:00 11 Goo
+22:00 11 Jack
+22:00 11 Javier
+22:00 11 Leo
+22:00 11 Loki
+22:00 11 Thor
+22:00
+1 700 06:55
+2 700 06:55
+3 700 06:35

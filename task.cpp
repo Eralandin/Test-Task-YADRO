@@ -38,7 +38,7 @@ bool ValidateTimeFormat(const string& time){
 int getTimeMinutes(const string& time){
 	int hours = std::stoi(time.substr(0, 2));
     int minutes = std::stoi(time.substr(3, 2));
-    return hours * 60 + minutes;
+    return (hours * 60) + minutes;
 }
 
 // Метод проверки, что строка содержит только цифры
@@ -49,11 +49,11 @@ bool isDigits(const string& str) {
 //Класс "Стол"
 class Table{
 	private: 
-		bool isBusy = false;
 		int ID;
-		int busyStart;
-		int busyEnd;
 	public:
+		bool isBusy = false;
+		int busyStart = 0;
+		int busyEnd = 0;
 		Table(const int id){
 			this->setID(id);
 		}
@@ -66,20 +66,22 @@ class Table{
 			return ID;
 		}
 		void setBusyStart(int timeStart) {
+			this->busyEnd = 0;
 	        this->busyStart = timeStart;
 	        isBusy = true;
     	}
 		void setBusyEnd(int timeEnd, int hourCost) {
-	        this->busyEnd = timeEnd;
-	        this->busySummary += (this->busyEnd - this->busyStart);
-	        if ((this->busyEnd - this->busyStart)%60 != 0){
-	        	this->earnings += ((this->busyEnd - this->busyStart) / 60 + 1) * hourCost;
-			}
-			else{
-				this->earnings += ((this->busyEnd - this->busyStart) / 60) * hourCost;
-			}
-	        isBusy = false;
-    	}
+			    this->busyEnd = timeEnd;
+			    int busyDuration = this->busyEnd - this->busyStart; // Вычисление продолжительности в минутах
+			    this->busySummary += busyDuration; 
+			    int hoursUsed = busySummary / 60; // Преобразование в количество часов
+			    if (busySummary % 60 != 0) { // Проверка на неполные часы
+			        hoursUsed++;
+			    }
+			    this->earnings = hoursUsed * hourCost;
+			
+			    isBusy = false;
+		}
 		bool getIsBusy() const {
         	return isBusy;
     	}
@@ -158,22 +160,22 @@ class ComputerClub{
 	        } 
 			else {
 	        	int currentTable = clientTable[event.clientName];
-	            if (currentTable != -1 && tables[currentTable].getIsBusy()) {
+	            if (currentTable != -1 && tables[currentTable-1].getIsBusy()) {
 	                tables[currentTable - 1].setBusyEnd(event.time, hourCost);
 	            }
-	            if (tables[event.tableNumber].getIsBusy()) {
+	            if (tables[event.tableNumber-1].getIsBusy()) {
 	                generateError(event.time, "PlaceIsBusy", output);
 	            } 
 				else {
 	                tables[event.tableNumber - 1].setBusyStart(event.time);
-                clientTable[event.clientName] = event.tableNumber;
+                	clientTable[event.clientName] = event.tableNumber;
 	            }
 	        }
 		}
 		void clientsWaiting(const Event& event, vector<string>& output) {
 			output.push_back(formatTime(event.time) + " 3 " + event.clientName);
 	        if (clientTable.find(event.clientName) == clientTable.end()) {
-            generateError(event.time, "ClientUnknown", output);
+            	generateError(event.time, "ClientUnknown", output);
         	} 
 			else {
 	            bool hasFreeTable = false;
@@ -187,6 +189,7 @@ class ComputerClub{
 	                generateError(event.time, "ICanWaitNoLonger!", output);
 	            } 
 				else if (waitingQueue.size() >= tablesCount) {
+    				clientTable.erase(event.clientName);
 	                generateEvent(event.time, 11, event.clientName, output);
 	            } 
 				else {
@@ -220,6 +223,13 @@ class ComputerClub{
 	                	}
 					}
 	            }
+	            else{
+	            	if (event.time >= workEnd)
+					{
+						output.pop_back();
+	                	generateEvent(event.time,11,event.clientName,output);
+					}
+				}
 	            clientTable.erase(event.clientName);
 	        }
 	    }
