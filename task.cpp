@@ -7,6 +7,7 @@
 #include <cctype>
 #include <map>
 #include <queue>
+#include <algorithm>
 
 using namespace std;
 //Метод валидации формата времени
@@ -39,6 +40,12 @@ int getTimeMinutes(const string& time){
     int minutes = std::stoi(time.substr(3, 2));
     return hours * 60 + minutes;
 }
+
+// Метод проверки, что строка содержит только цифры
+bool isDigits(const string& str) {
+    return all_of(str.begin(), str.end(), ::isdigit);
+}
+
 //Класс "Стол"
 class Table{
 	private: 
@@ -199,6 +206,7 @@ class ComputerClub{
 	                tables[tableNumber - 1].setBusyEnd(event.time, hourCost);
 	                if (event.time >= workEnd)
 					{
+						output.pop_back();
 	                	generateEvent(event.time,11,event.clientName,output);
 					}
 					else
@@ -227,51 +235,83 @@ class ComputerClub{
     	}
 };
 //Тело программы
-int main(){
-	string filename = "test_file.txt";
-    std::ifstream file(filename.c_str());
+int main(int argc, char* argv[]){
+	if (argc != 2) {
+        cerr << "Error! Usage: " << argv[0] << " <filename>" << endl;
+        return 1;
+    }
+
+    string filename = argv[1];
+    ifstream file(filename.c_str());
 
     if (!file.is_open()) {
-        std::cerr << "Can't open file: " << filename << std::endl;
-        return 0;
+        cerr << "Can't open file: " << filename << endl;
+        return 1;
     }
 
     int tablesCount, hourCost;
     string workStartStr, workEndStr;
-    int lineNumber = 1;
-
-    if (!(file >> tablesCount)) {
-        cerr << "Error: Incorrect input format in line " << lineNumber << endl;
+    string line;
+	
+	//чтение первой строки
+    if (getline(file, line)) {
+        istringstream iss(line);
+        if (!(iss >> tablesCount) || !isDigits(line)) {
+            cerr << "Error: Incorrect input format in line: " << line << endl;
+            return 0;
+        }
+    } else {
+        cerr << "Error: Failed to read the first line" << endl;
         return 0;
     }
-    lineNumber++;
-
-    if (!(file >> workStartStr >> workEndStr) || !ValidateTimeFormat(workStartStr) || !ValidateTimeFormat(workEndStr)) {
-        cerr << "Error: Incorrect input format in line " << lineNumber << endl;
+	// Чтение второй строки
+    if (getline(file, line)) {
+        istringstream iss(line);
+        if (!(iss >> workStartStr >> workEndStr) || !ValidateTimeFormat(workStartStr) || !ValidateTimeFormat(workEndStr)) {
+            cerr << "Error: Incorrect input format in line " << line << endl;
+            return 0;
+        }
+    } else {
+        cerr << "Error: Failed to read the second line" << endl;
         return 0;
     }
-    lineNumber++;
 
     int workStart = getTimeMinutes(workStartStr);
     int workEnd = getTimeMinutes(workEndStr);
 
-    if (!(file >> hourCost)) {
-        cerr << "Error: Incorrect input format in line " << lineNumber << endl;
+    //чтение третьей стрки
+    if (getline(file, line)) {
+        istringstream iss(line);
+        if (!(iss >> hourCost) || !isDigits(line)) {
+            cerr << "Error: Incorrect input format in line " << line << endl;
+            return 0;
+        }
+    } else {
+        cerr << "Error: Failed to read the third line" << endl;
         return 0;
     }
-    lineNumber++;
 
     ComputerClub club(tablesCount, workStart, workEnd, hourCost);
     vector<string> output;
 
     output.push_back(workStartStr);
 
-    string timeStr, clientName;
-    int eventID, tableNumber;
-
-    while (file >> timeStr >> eventID >> clientName) {
+    while (getline(file,line)) {
+    	istringstream iss(line);
+        string timeStr, clientName;
+        int eventID, tableNumber;
+        
+        if (!(iss >> timeStr >> eventID >> clientName)) {
+            cerr << "Error: Incorrect input format in line " << line << endl;
+            return 0;
+        }
+        if (!isDigits(to_string(eventID))){
+        	cerr << "Error: Incorrect input format in line " << line << endl;
+            return 0;
+		}
+        
         if (!ValidateTimeFormat(timeStr)) {
-            cerr << "Error: Incorrect input format in line " << lineNumber << " (" << timeStr << ")" << endl;
+            cerr << "Error: Incorrect input format in line " << line << endl;
             return 0;
         }
         int time = getTimeMinutes(timeStr);
@@ -286,14 +326,16 @@ int main(){
             club.processEvent(Event(time, eventID, clientName), output);
             break;
         case 2:
-            file >> tableNumber;
+            if (!(iss >> tableNumber) || !isDigits(to_string(tableNumber))) {
+                cerr << "Error: Incorrect input format in line " << line << endl;
+                return 0;
+            }
             club.processEvent(Event(time, eventID, clientName, tableNumber), output);
             break;
         default:
-            std::cerr << "Error: Incorrect input format (unknown event ID) " << eventID << std::endl;
+            std::cerr << "Error: Incorrect input format (unknown event ID) in line " << line << std::endl;
             return 0;
         }
-        lineNumber++;
     }
     
     while (!club.clientTable.empty()) {
