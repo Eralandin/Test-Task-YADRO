@@ -77,16 +77,16 @@ class Table{
 	        isBusy = true;
     	}
 		void setBusyEnd(int timeEnd, int hourCost) {
-			    this->busyEnd = timeEnd;
-			    int busyDuration = this->busyEnd - this->busyStart; // Вычисление продолжительности в минутах
-			    this->busySummary += busyDuration; 
-			    int hoursUsed = busySummary / 60; // Преобразование в количество часов
-			    if (busySummary % 60 != 0) { // Проверка на неполные часы
-			        hoursUsed++;
-			    }
-			    this->earnings = hoursUsed * hourCost;
-			
-			    isBusy = false;
+			this->busyEnd = timeEnd;
+			int busyDuration = this->busyEnd - this->busyStart; // Вычисление продолжительности в минутах
+			this->busySummary += busyDuration; 
+			if (busyDuration%60 != 0){
+				this->earnings += ((busyDuration/60)+1)*hourCost;
+			}
+			else{
+			    this->earnings += (busyDuration/60) * hourCost;
+			}
+			isBusy = false;
 		}
 		bool getIsBusy() const {
         	return isBusy;
